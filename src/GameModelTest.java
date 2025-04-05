@@ -22,7 +22,7 @@ public class GameModelTest {
                 if (grid[i][j] == 1) shipSquares++;
             }
         }
-        assertEquals(16, shipSquares, "Should have 17 ship squares (5+4+3+3+2)");
+        assertEquals(16, shipSquares, "Should have 16 ship squares (5+4+3+2+2)");
     }
 
     @Test

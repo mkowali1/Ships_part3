@@ -1,7 +1,11 @@
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
-public class CLIGameView implements GameView{
+public class CLIGameView implements GameView, Observer {
 
+    private static final Logger LOGGER = Logger.getLogger(CLIGameView.class.getName());
     private Scanner scanner;
 
     public CLIGameView() {
@@ -10,6 +14,9 @@ public class CLIGameView implements GameView{
 
     @Override
     public void displayGrid(int[][] grid) {
+        if (grid == null || grid.length != 10 || grid[0].length != 10) {
+            throw new IllegalArgumentException("Grid must be 10x10");
+        }
         System.out.println("  1 2 3 4 5 6 7 8 9 10");
         for (int row = 0; row < 10; row++) {
             System.out.print((char)('A' + row) + " ");
@@ -30,6 +37,7 @@ public class CLIGameView implements GameView{
 
     @Override
     public void showMessage(String msg) {
+        if (msg == null) msg = "";
         System.out.println(msg);
     }
 
@@ -43,5 +51,19 @@ public class CLIGameView implements GameView{
             showMessage("Invalid input!");
             return getInput();
         }
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        System.out.println("[Observer] Update triggered by " + o.getClass().getSimpleName());
+        LOGGER.fine("CLIGameView received update");
+
+//        if (!(o instanceof GameModel)) { //Uncomment if you want to see grid in command line
+//            LOGGER.warning("Received update from unexpected observable: " + o.getClass().getName());
+//            throw new IllegalStateException("Observer expected GameModel, got " + o.getClass().getName());
+//        }
+//        GameModel model = (GameModel) o;
+//        int[][] grid = (arg != null) ? (int[][]) arg : model.getGrid();
+//        displayGrid(grid);
     }
 }

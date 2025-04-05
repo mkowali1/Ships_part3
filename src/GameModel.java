@@ -3,9 +3,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
 import java.util.Random;
 
-public class GameModel {
+public class GameModel extends Observable {
 
     private int[][] grid;
     private List<Ship> ships;
@@ -31,6 +32,7 @@ public class GameModel {
         hits = 0;
         misses = 0;
         placeShipsRandomly();
+        notifyModelChanged();
     }
 
     void placeShipsRandomly(){
@@ -47,9 +49,13 @@ public class GameModel {
                 }
             }
         }
+        notifyModelChanged();
     }
 
     private boolean canPlaceShip(int row, int col, int length, boolean horizontal) {
+        if(row < 0 || col < 0 || length <= 0){
+            return false;
+        }
         if (horizontal) {
             if (col + length > GRID_SIZE) return false;
             for (int c = col; c < col + length; c++) {
@@ -65,6 +71,9 @@ public class GameModel {
     }
 
     private void placeShip(int row, int col, int length, boolean horizontal) {
+        if(row < 0 || col < 0 || row >= GRID_SIZE || col >= GRID_SIZE || length <= 0){
+            throw new IllegalArgumentException("Invalid ship placement parameters");
+        }
         Ship ship = new Ship(row, col, length, horizontal);
         ships.add(ship);
         if (horizontal) {
@@ -79,6 +88,9 @@ public class GameModel {
     }
 
     public void loadShipsFromFile(String file){
+        if (file == null || file.trim().isEmpty()) {
+            throw new IllegalArgumentException("File path cannot be null or empty");
+        }
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
                 grid[i][j] = 0;
@@ -132,9 +144,11 @@ public class GameModel {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid number format in file: " + file, e);
         }
+        notifyModelChanged();
     }
 
     private void markSunkShip(Ship ship) {
+        if (ship == null) throw new IllegalArgumentException("Ship cannot be null");
         int row = ship.getStartRow();
         int col = ship.getStartCol();
         int length = ship.getLength();
@@ -155,11 +169,15 @@ public class GameModel {
     }
 
     public boolean processGuess(String guess){
+        if (guess == null || !guess.matches("[A-J](10|[1-9])")) {
+            return false;
+        }
         int row = guess.charAt(0) - 'A';
         int col = Integer.parseInt(guess.substring(1)) - 1;
         if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE || grid[row][col] > 1) {
             return false;
         }
+        boolean hit = false;
         if (grid[row][col] == 1) {
             grid[row][col] = 2;
             hits++;
@@ -168,15 +186,16 @@ public class GameModel {
                     if (ship.isSunk()) {
                         markSunkShip(ship);
                     }
+                    hit = true;
                     break;
                 }
             }
-            return true;
         } else {
             grid[row][col] = 3;
             misses++;
-            return false;
         }
+        notifyModelChanged();
+        return hit;
     }
 
     public boolean isGameOver() {
@@ -189,5 +208,10 @@ public class GameModel {
 
     public int getShotsNumber(){
         return (hits + misses);
+    }
+
+    private void notifyModelChanged(){
+        setChanged();
+        notifyObservers(getGrid());
     }
 }

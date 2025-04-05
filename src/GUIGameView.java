@@ -2,8 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.logging.Logger;
 
-public class GUIGameView implements GameView{
+public class GUIGameView implements GameView, Observer {
+    private static final Logger LOGGER = Logger.getLogger(GUIGameView.class.getName());
     private JFrame frame;
     private JButton[][] gridButtons;
     private JLabel messageLabel;
@@ -54,6 +58,9 @@ public class GUIGameView implements GameView{
 
     @Override
     public void displayGrid(int[][] grid) {
+        if (grid == null || grid.length != 10 || grid[0].length != 10) {
+            throw new IllegalArgumentException("Grid must be 10x10");
+        }
         for (int row = 0; row < 10; row++) {
             for (int col = 0; col < 10; col++) {
                 if (grid[row][col] == 0) {
@@ -78,6 +85,9 @@ public class GUIGameView implements GameView{
 
     @Override
     public void showMessage(String msg) {
+        if (msg == null){
+            msg = "";
+        }
         messageLabel.setText(msg);
     }
 
@@ -95,5 +105,26 @@ public class GUIGameView implements GameView{
             }
         }
         return lastInput;
+    }
+
+    /**
+     * Updates GUI when Model changes.
+     * @param o Must be GameModel (throws IllegalStateException otherwise)
+     * @param arg Optional grid data; falls back to Model.getGrid()
+     */
+    @Override
+    public void update(Observable o, Object arg) {
+        System.out.println("[Observer] Update triggered by " + o.getClass().getSimpleName());
+        if (!(o instanceof GameModel)) {
+            LOGGER.warning("Received update from unexpected observable: " + o.getClass().getName());
+            throw new IllegalStateException("Observer expected GameModel, got " + o.getClass().getName());
+        }
+        GameModel model = (GameModel) o;
+        int[][] grid = (arg != null) ? (int[][]) arg : model.getGrid();
+        LOGGER.fine("GUIGameView received update from GameModel");
+        displayGrid(grid);
+        if (model.isGameOver()) {
+            showMessage("Game Over! All ships sunk!");
+        }
     }
 }

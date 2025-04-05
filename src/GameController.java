@@ -1,3 +1,5 @@
+import java.util.Observer;
+
 public class GameController {
     private GameModel model;
     private GameView view;
@@ -5,6 +7,9 @@ public class GameController {
     public GameController(GameModel model, GameView view) {
         this.model = model;
         this.view = view;
+        if (view instanceof Observer) {
+            model.addObserver((Observer) view);
+        }
     }
 
     public void startGame() {
@@ -16,7 +21,6 @@ public class GameController {
 
     private void playGame() {
         while (!model.isGameOver()) {
-            view.displayGrid(model.getGrid());
             String input = view.getInput();
             if (input == null || input.equalsIgnoreCase("quit")) {
                 view.showMessage("Game ended by player.");
@@ -31,7 +35,6 @@ public class GameController {
             }
         }
         if (model.isGameOver()) {
-            view.displayGrid(model.getGrid());
             view.showMessage("Game Over! You sank all ships in " + model.getShotsNumber() + " shots");
         }
     }
