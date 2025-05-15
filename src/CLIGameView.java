@@ -58,12 +58,12 @@ public class CLIGameView implements GameView, Observer {
         System.out.println("[Observer] Update triggered by " + o.getClass().getSimpleName());
         LOGGER.fine("CLIGameView received update");
 
-//        if (!(o instanceof GameModel)) { //Uncomment if you want to see grid in command line
-//            LOGGER.warning("Received update from unexpected observable: " + o.getClass().getName());
-//            throw new IllegalStateException("Observer expected GameModel, got " + o.getClass().getName());
-//        }
-//        GameModel model = (GameModel) o;
-//        int[][] grid = (arg != null) ? (int[][]) arg : model.getGrid();
-//        displayGrid(grid);
+        if (!(o instanceof GameModel)) {
+            LOGGER.warning("Received update from unexpected observable: " + o.getClass().getName());
+            throw new IllegalStateException("Observer expected GameModel, got " + o.getClass().getName());
+        }
+        GameModel model = (GameModel) o;
+        int[][] grid = (arg != null) ? (int[][]) arg : model.getGrid();
+        displayGrid(grid);
     }
 }
